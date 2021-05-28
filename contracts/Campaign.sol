@@ -1,35 +1,56 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-contract Lottery {
+contract Campaign {
+    struct Request {
+        string description;
+        uint value;
+        address recipient;
+        bool complete;
+        uint approvalCount;
+        mapping(address => bool) approvals;
+    }
+
+    Request[] public requests;
     address public manager;
-    address payable[] public players;
-    
-    constructor() {
-        manager = msg.sender;
-    }    
-    
-    function enter() public payable {
-        require(msg.value > .01 ether);
-        players.push(payable(msg.sender));
-    }
-    
-    function random() private view returns (uint) {
-        return uint(keccak256(abi.encodePacked(block.difficulty, block.timestamp, players)));                
-    }
-    
-    function pickWinner() public restricted {
-        uint index = random() % players.length;
-        players[index].transfer(address(this).balance);
-        players = new address payable[](0); // clear players array
-    }
-    
+    uint public minimumContribution;
+    mapping(address => bool) public approvers;
+
     modifier restricted() {
         require(msg.sender == manager);
         _;
     }
-    
-    function getPlayers() public view returns (address payable[] memory) {
-        return players;
+
+    constructor(uint minimum) {
+        manager = msg.sender;
+        minimumContribution = minimum;
     }
-}   
+
+    function contribute() public payable {
+        require(msg.value > minimumContribution);
+
+        approvers[msg.sender] = true;
+    }
+
+    function createRequest(string description, uint value, address recipient) public restricted {
+        Request memory newRequest = Request({
+           description: description,
+           value: value,
+           recipient: recipient,
+           complete: false,
+           approvalCount: 0
+        });
+
+        requests.push(newRequest);
+    }
+
+    function approveRequest(uint index) public {
+        Request storage request = requests[index];
+
+        require(approvers[msg.sender]);
+        require(!request.approvals[msg.sender]);
+
+        request.approvals[msg.sender] = true;
+        request.approvalCount++;
+    }
+}
