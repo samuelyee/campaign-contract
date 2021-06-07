@@ -1,15 +1,20 @@
 const path = require('path');
-const fs = require('fs');
+const fs = require('fs-extra');
 const solc = require('solc');
-const util = require('util');
 
-const lotteryPath = path.resolve(__dirname, "contracts", "Lottery.sol");
-const source = fs.readFileSync(lotteryPath, "utf8");
+const contractNames = ['Campaign', 'CampaignFactory'];
+// delete existing build path if already exists
+const buildPath = path.resolve(__dirname, 'build');
+fs.removeSync(buildPath);
+
+// compile contract files in folder
+const campaignPath = path.resolve(__dirname, 'contracts', 'Campaign.sol');
+const source = fs.readFileSync(campaignPath, 'utf-8');
 
 const input = {
     language: 'Solidity',
     sources: {
-        'Lottery.sol': {
+        'Campaign.sol': {
             content: source
         }
     },
@@ -20,11 +25,19 @@ const input = {
         }
       }
     }
-}
+};
 
-// console.log(JSON.parse(solc.compile(JSON.stringify(input)), 1))
-const compile = JSON.parse(solc.compile(JSON.stringify(input)), 1).contracts['Lottery.sol']['Lottery'];
-// uncomment below lines if need to copy the abi
-// const { abi } = compile;
-// console.log(util.inspect(abi, false, null, true /* enable colors */))
-module.exports = compile;
+const output = JSON.parse(solc.compile(JSON.stringify(input))).contracts;
+// console.log(output);
+
+fs.ensureDirSync(buildPath);
+
+contractNames.forEach((contract) => {
+  console.log(contract)
+  compiledContract = output['Campaign.sol'][contract]
+  fs.outputJsonSync(
+    path.resolve(buildPath, contract + '.json'),
+    compiledContract
+  )
+});
+
