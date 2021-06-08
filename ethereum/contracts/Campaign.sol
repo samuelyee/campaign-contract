@@ -19,7 +19,7 @@ contract CampaignFactory {
 // Crowdfunding campaign where manager can create requests to buy materials.
 // Manager must have >50% of contributors to approve the purchase request
 contract Campaign {
-    
+
     struct Request {
         string description;
         uint value;
@@ -27,15 +27,15 @@ contract Campaign {
         bool complete;
         uint approvalCount;
     }
-    
+
     uint requestCounter; // track no. of requests
-    mapping(uint => Request) public requests; 
+    mapping(uint => Request) public requests;
     // track whether approver voted in specific request
     mapping(uint => address[]) approvalTrackers;
     // manager of the campaign to raise purchase request
     address public manager;
     // minimum amount to contribute
-    uint public minimumContribution; 
+    uint public minimumContribution;
     mapping(address => bool) public approvers;
     uint public approversCount;
 
@@ -80,10 +80,10 @@ contract Campaign {
         for (uint i=0; i<approval.length; i++) {
             require(approval[i] != msg.sender, "must not have voted previously");
         }
-        
+
         // request.approvals[msg.sender] = true;
         approval.push(msg.sender);
-        
+
         request.approvalCount++;
     }
 
@@ -96,6 +96,6 @@ contract Campaign {
         require(!request.complete);
 
         request.recipient.transfer(request.value);
-        requests[_index].complete = true; 
+        requests[_index].complete = true;
     }
 }
